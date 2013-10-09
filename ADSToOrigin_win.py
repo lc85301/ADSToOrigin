@@ -7,6 +7,8 @@ def convert(filename):
 	data = []
 	first = True
 	emptyLine = False
+	infile = None
+	outfile = None
 
 	col1 = []
 	col2 = []
@@ -30,7 +32,7 @@ def convert(filename):
 				col2.append(line[1])
 		data.append(col2)
 	except IOError:
-		sys.stderr.write("can't open file")
+		sys.stderr.write("can't open file\n")
 		return(1)
 	finally:
 		if infile is not None:
@@ -42,7 +44,7 @@ def convert(filename):
 		for line in zip(*data):
 			outfile.write("%s\n" %("\t".join(line)))
 	except IOError:
-		sys.stderr.write("can't open file")
+		sys.stderr.write("can't open file\n")
 		return(1)
 	finally:
 		if outfile is not None:
@@ -60,4 +62,3 @@ while 1:
 	else: 
 		filename = "./" + filename
 		convert(filename)
-
