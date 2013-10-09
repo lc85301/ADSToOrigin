@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python2.7
 
 import sys
 
@@ -13,7 +13,8 @@ def convert(filename):
 	try:
 		infile = open(filename, mode='r')
 		for line in infile:
-			if line == '\n':
+			line = line.strip()
+			if not line:
 				emptyLine = True
 			else:
 				if emptyLine == True:
