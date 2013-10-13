@@ -10,7 +10,7 @@ into format easier to import into Origin
 	./ADSToOrigin file1 file2 ....
 
 ## Bugs:
-* Please report bugs / mis-formatted pages to the github issure tracker.
+* Please report bugs / request to the github issure tracker.
 
 ## Contributing:
 1. Fork it
