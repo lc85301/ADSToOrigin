@@ -1,0 +1,23 @@
+---------------
+ADSToOrigin Changelog
+---------------
+
+ADSToOrigin 0.2.1 (十二月 24, 2013):
+  Feature added:
+  * Using argv as default running file, 
+    windows user can directly draw file on the .exe file to convert it.
+
+ADSToOrigin 0.1.2 (十月 9, 2013):
+  Bug Fixed:
+  * modify open file error
+
+  Feature added:
+  * windows version usgin py2exe
+  * switching to python2.7
+
+ADSToOrigin 0.1.1 (十月 8, 2013):
+  Feature added:
+  * first version, linux + python3 support
+
+ADSToOrigin 0.1.0 (十月 8, 2013):
+  * Project initial

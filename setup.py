@@ -3,5 +3,5 @@
 from distutils.core import setup
 import py2exe
 
-setup(console=['ADSToOrigin_win.py'])
+setup(console=['ADSToOrigin.py'])
 

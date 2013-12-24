@@ -8,6 +8,9 @@ into format easier to import into Origin
 ## Usage:
 * Linux: Install python 3
 	./ADSToOrigin file1 file2 ....
+* Windows:
+    Drag the file from ADS onto ADSToOrigin.exe
+    Windows will execute ADSToOrigin.exe and generate filename_origin.txt
 
 ## Bugs:
 * Please report bugs / request to the github issure tracker.
