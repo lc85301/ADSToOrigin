@@ -2,6 +2,15 @@
 ADSToOrigin Changelog
 ---------------
 
+ADSToOrigin 0.2.2 (十二月 25, 2013):
+  Feature added:
+  * Support multi-variable parser
+
+  Bug Detected:
+  * The variable name should not include space, otherwise converter will cut
+  string in wrong place
+  
+
 ADSToOrigin 0.2.1 (十二月 24, 2013):
   Feature added:
   * Using argv as default running file, 

@@ -34,11 +34,13 @@ class ADSToOrigin():
   ADS one column data to Origin style multi column data"""
   #member variable
   data = None 
+  tital = None
 
   genoutname = lambda self,x : os.path.splitext(x)[0] + "_origin.txt"
 
   def __init__(self):
     self.data = []
+    self.tital = []
 
   def prompt(self,):
 		"""prompt ask user input file name, then call convert
@@ -55,6 +57,7 @@ class ADSToOrigin():
   def convert(self, filename):
     """pack of read and write file"""
     self.readfile(filename)
+    print(self.tital)
     outname = self.genoutname(filename)
     self.writefile(outname)
 
@@ -77,31 +80,30 @@ class ADSToOrigin():
     titalcol = []
     idxcol = []
     valcol = []
-    firstsec = True
-    firstempty = False
-    firstline = True
     infile = None
+    hasData = False
+    isFirstBlock = True
+    block = []
 
     try:
       infile = open(filename, mode='r')
       for line in infile:
-        line = line.strip().strip('\n')
+        line = line.strip().strip('\n').split()
         if not line:
-          if firstempty:
-            firstempty = False
-          else:
-            if firstsec == True:
-              firstsec = False
+          if hasData:
+            titalcol,idxcol,valcol = self.processBlock(block, isFirstBlock)
+            if isFirstBlock:
+              isFirstBlock = False
               self.data.append([copy.copy(x) for x in idxcol])
-              del idxcol[:]
-            self.data.append([copy.copy(x) for x in valcol]);
+            self.data.append([copy.copy(x) for x in valcol])
+            self.tital.append(titalcol)
+            hasData = False
+            del block[:]
+            del idxcol[:]
             del valcol[:]
         else:
-          firstempty = True
-          line = line.split()
-          if firstsec == True:
-            idxcol.append(line[-2])
-          valcol.append(line[-1])
+          hasData = True
+          block.append(line)
     except IOError:
 			sys.stderr.write("can't open input ADS style file\n")
 			sys.stderr.write("file %s doesn't exist\n" % (filename))
@@ -110,10 +112,37 @@ class ADSToOrigin():
       if infile is not None:
         infile.close()
 
+  def processBlock(self, block, isFirstBlock):
+    """read one block, and add item to titalcol, idxcol and valcol"""
+    # parse block
+    # tital is block[0][0]=block[1][0],block[0][1]=block[1][1]....
+    idxlist = [ 0 for i in range(len(block)-1)]
+    vallist = [ 0 for i in range(len(block)-1)]
+    titallist = []
+    if len(block[0]) <2:
+      sys.stderr.write("There are some error in this ADS file")
+    elif len(block[0]) == 2:
+      if isFirstBlock:
+        titallist.append(block[0][0])
+      titallist.append(block[0][1])
+      tital = " ".join(titallist)
+    elif len(block[0]) > 2:
+      for i,(row0,row1) in enumerate(zip(block[0][0:-2], block[1][0:-2])):
+        titallist.append("%s=%s" % (row0, row1))
+      tital = ",".join(titallist)
+      if isFirstBlock:
+        tital = ("%s " %(block[0][-2])) + tital 
+    for i in range(1,len(block)):
+      idxlist[i-1] = block[i][-2]
+      vallist[i-1] = block[i][-1]
+
+    return tital,idxlist, vallist
+
   def writefile(self, filename):
     """write loaded data into output file"""
     try:
       outfile = open(filename, mode='w')
+      outfile.write("%s\n" % ("\t".join(self.tital)))
       for line in zip(*(self.data)):
         outfile.write("%s\n" %("\t".join(line)))
     except IOError:
