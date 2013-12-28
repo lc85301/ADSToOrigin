@@ -56,8 +56,19 @@ class ADSToOrigin():
 
   def convert(self, filename):
     """pack of read and write file"""
+    self.data = []
     self.readfile(filename)
-    print(self.tital)
+    #verify data
+    datalength = len(self.data[0])
+    identical = True
+    for col in self.data[1:]:
+      if datalength != len(col):
+        identical = False
+        break;
+    if not identical:
+      print("The data length in file %s is not identical" % (filename))
+      print("Output file will be incorrect")
+
     outname = self.genoutname(filename)
     self.writefile(outname)
 
@@ -157,5 +168,4 @@ if __name__ == '__main__':
   converter = ADSToOrigin()
   for inarg in sys.argv[1:]:
     converter.convert(inarg)
-  #converter.prompt()
-
+  raw_input("convert complete. (Press any key to continue...)\n")

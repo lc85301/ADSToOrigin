@@ -2,6 +2,13 @@
 ADSToOrigin Changelog
 ---------------
 
+ADSToOrigin 0.2.3 (十二月 28, 2013):
+  Feature added:
+  * warning when data size are different
+
+  Bug Fixed:
+  * multi file will cause duplicate data in later file
+
 ADSToOrigin 0.2.2 (十二月 25, 2013):
   Feature added:
   * Support multi-variable parser
