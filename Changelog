@@ -2,6 +2,10 @@
 ADSToOrigin Changelog
 ---------------
 
+ADSToOrigin 0.2.4 (十二月 28, 2013):
+  Bug Fixed:
+  * multi file will cause duplicate tital in later files
+
 ADSToOrigin 0.2.3 (十二月 28, 2013):
   Feature added:
   * warning when data size are different

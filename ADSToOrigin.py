@@ -57,6 +57,7 @@ class ADSToOrigin():
   def convert(self, filename):
     """pack of read and write file"""
     self.data = []
+    self.tital = []
     self.readfile(filename)
     #verify data
     datalength = len(self.data[0])
