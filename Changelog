@@ -2,6 +2,13 @@
 ADSToOrigin Changelog
 ---------------
 
+ADSToOrigin 0.3.0 (三月 01, 2014):
+  Feature added:
+  * deal with smith chart
+
+  Bug Fixed:
+  * tital separate by space not tab
+
 ADSToOrigin 0.2.3 (十二月 28, 2013):
   Feature added:
   * warning when data size are different
