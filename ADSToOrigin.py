@@ -31,20 +31,38 @@ import copy
 import math
 
 class ADSToOrigin():
-  """A clas that provide a easy tool, transfer
+  """A class that provide a easy tool, transfer
   ADS one column data to Origin style multi column data"""
   #member variable
   data = None 
-  tital = None
+  title = None
   charttype = None
+  Z0 = 50
+  smithsuffix = ["_real", "_imag"]
+  pushChars = "<({["
+  popChars = ">)}]"
+
   genoutname = lambda self,x : os.path.splitext(x)[0] + "_plot.txt"
 
   def __init__(self):
     self.data = []
-    self.tital = []
+    self.title = []
     self.charttype = "rectangle"
-    self.Z0 = 50
-    self.smithsuffix = ["_real", "_imag"]
+
+  def checkBalanced(self, token):
+    stack = []
+    for c in token:
+      if c in self.pushChars:
+        stack.append(c)
+      elif c in self.popChars:
+        if not len(stack):
+          return False
+        else:
+          stackTop = stack.pop()
+          balancingBracket = self.pushChars[self.popChars.index(c)]
+          if stackTop != balancingBracket:
+            return False
+    return not stack
 
   def MP2RI(self, magnitude, phase):
     """return real, imaginary part from magnitude, phase"""
@@ -58,8 +76,10 @@ class ADSToOrigin():
   def convert(self, filename):
     """pack of read and write file"""
     self.data = []
-    self.tital = []
+    self.title = []
     self.readfile(filename)
+    outname = self.genoutname(filename)
+    basename = os.path.basename(filename)
 
     #verify data
     datalength = len(self.data[0])
@@ -69,16 +89,17 @@ class ADSToOrigin():
         identical = False
         break;
     if not identical:
-      print("The data length in file %s is not identical" % (filename))
+      print("The data length in file %s is not identical" % (basename))
       print("Output file will be incorrect")
 
     #output file
-    outname = self.genoutname(filename)
     self.writefile(outname)
+
+    print("convert %s, file type %s" % (basename, self.charttype))
 
   def readfile(self, filename):
     """readfile, read a block separated by blank line"""
-    titalcol = []
+    titlecol = []
     idxcol = []
     valcol = []
     infile = None
@@ -95,7 +116,8 @@ class ADSToOrigin():
         line = line.strip().strip('\n').split()
         if not line:
           if hasData:
-            titalcol,idxcol,valcol = self.processBlock(block, isFirstBlock)
+            titlecol = self.processTitle(block[0], block[1], isFirstBlock)
+            idxcol,valcol = self.processBlock(block[1:])
             if isFirstBlock:
               isFirstBlock = False
               self.data.append([copy.copy(x) for x in idxcol])
@@ -104,7 +126,7 @@ class ADSToOrigin():
             elif self.charttype == "smith":
               self.data.append([copy.copy(x) for x in valcol[0]])
               self.data.append([copy.copy(x) for x in valcol[1]])
-            self.tital.append(titalcol)
+            self.title += titlecol
             hasData = False
             del block[:]
             del idxcol[:]
@@ -113,72 +135,79 @@ class ADSToOrigin():
           hasData = True
           block.append(line)
     except IOError:
-			sys.stderr.write("can't open input ADS style file\n")
-			sys.stderr.write("file %s doesn't exist\n" % (filename))
-			return(1)
+      sys.stderr.write("can't open input ADS style file\n")
+      sys.stderr.write("file %s doesn't exist\n" % (filename))
+      return(1)
     finally:
-      print("convert %s, file type %s" % (filename, self.charttype))
       if infile is not None:
         infile.close()
 
-  def processBlock(self, block, isFirstBlock):
-    """read one block, and add item to titallist, idxlist and vallist"""
-    # parse block
-    # tital is block[0][0]=block[1][0],block[0][1]=block[1][1]....
-    idxlist = [ 0 for i in range(len(block)-1)]
-    if self.charttype == "rectangle":
-      vallist = [ 0 for i in range(len(block)-1)]
-    elif self.charttype == "smith":
-      vallist = [[0 for i in range(len(block)-1)],[0 for i in range(len(block)-1)]]
-    titallist = []
+  def processTitle(self, line, dataline, isFirstBlock):
+    validlist = []
+    titlelist = []
+    validname = ""
+    # parse title
+    # title is block[0][0]=block[1][0],block[0][1]=block[1][1]....
+    # in smith chart format, we need to duplicate title for real / imaginary
+    for token in line:
+      validname += token
+      if self.checkBalanced(validname):
+        validlist.append(validname)
+        validname = ""
 
-    # parse tital
-    # tital is block[0][0]=block[1][0],block[0][1]=block[1][1]....
-    # in smith chart format, we need to duplicate tital for real / imaginary
-    # and duplicate tital 
-    if len(block[0]) <2:
-      sys.stderr.write("There are some error in this ADS file")
-    elif len(block[0]) == 2:
+    if len(validlist) == 2:
       if isFirstBlock:
-        titallist.append(block[0][0])
+        titlelist.append(validlist[0])
       if self.charttype == "rectangle":
-        titallist.append(block[0][1])
+        titlelist.append(validlist[1])
       elif self.charttype == "smith":
-        titallist.append("\t".join(block[0][1]+self.smithsuffix[i] for i in range(2)))
-      tital = "\t".join(titallist)
-    elif len(block[0]) > 2:
-      if self.charttype == "rectangle":
-        for row0,row1 in zip(block[0][0:-2], block[1][0:-2]):
-          titallist.append("%s=%s" % (row0, row1))
-        tital = ",".join(titallist)
-      elif self.charttype == "smith":
-        for row0,row1 in zip(block[0][0:-2], block[1][0:-2]):
-          titallist.append("%s=%s" % (row0, row1))
-        titalstem = ",".join(titallist)
-        tital = "\t".join(titalstem+self.smithsuffix[i] for i in range(2))
+        for i in range(2):
+          titlelist.append(validlist[1]+self.smithsuffix[i])
+    elif len(validlist) > 2:
+      token = []
+      token.append(validlist[-1])
       if isFirstBlock:
-        tital = ("%s " %(block[0][-2])) + tital 
-    
+        titlelist.append(validlist[-2])
+      if self.charttype == "rectangle":
+        for row0,row1 in zip(validlist[0:-2], dataline[0:-2]):
+          token.append("%s=%s" % (row0, row1))
+        titlelist.append(",".join(token))
+      elif self.charttype == "smith":
+        for row0,row1 in zip(validlist[0:-2], dataline[0:-2]):
+          token.append("%s=%s" % (row0, row1))
+        titlelist.append(",".join(token))
+
+    return titlelist
+
+  def processBlock(self, block):
+    """read one block, and add item to idxlist and vallist"""
+    # parse block
+    idxlist = [ 0 for i in range(len(block))]
+    if self.charttype == "rectangle":
+      vallist = [ 0 for i in range(len(block))]
+    elif self.charttype == "smith":
+      vallist = [[0 for i in range(len(block))],[0 for i in range(len(block))]]
+
     # parse data, different behavior with rectangle or smith chart
     # in rectangle, simply use last two column as index and value column
     # in smith chart, we need to change magnitude / phase into real img 
     if self.charttype == "rectangle":
-      for i in range(1,len(block)):
-        idxlist[i-1] = block[i][-2]
-        vallist[i-1] = block[i][-1]
+      for i in range(0,len(block)):
+        idxlist[i] = block[i][-2]
+        vallist[i] = block[i][-1]
     elif self.charttype == "smith":
-      idxid = (len(block)-1)/3
-      for i in range(1, len(block)):
-        idxlist[i-1] = block[i][0]
-        vallist[0][i-1], vallist[1][i-1] = self.MP2RI(block[i][-3], block[i][-1])
+      idxid = (len(block))/3
+      for i in range(0, len(block)):
+        idxlist[i] = block[i][0]
+        vallist[0][i], vallist[1][i-1] = self.MP2RI(block[i][-3], block[i][-1])
 
-    return tital,idxlist,vallist
+    return idxlist,vallist
 
   def writefile(self, filename):
     """write loaded data into output file"""
     try:
       outfile = open(filename, mode='w')
-      outfile.write("%s\n" % ("\t".join(self.tital)))
+      outfile.write("%s\n" % ("\t".join(self.title)))
       for line in zip(*(self.data)):
         outfile.write("%s\n" %("\t".join(line)))
     except IOError:

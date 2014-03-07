@@ -2,6 +2,14 @@
 ADSToOrigin Changelog
 ---------------
 
+ADSToOrigin 0.3.1 (三月 06, 2014):
+  Feature added:
+  * Handle parentheses and bracket correctly
+
+  Bug Fixed:
+  * output message will shows file fullname, modify to basename
+  * spell error tital -> title
+
 ADSToOrigin 0.3.0 (三月 01, 2014):
   Feature added:
   * deal with smith chart
