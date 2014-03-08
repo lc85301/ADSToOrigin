@@ -36,18 +36,18 @@ class ADSToOrigin():
   #member variable
   data = None 
   title = None
-  charttype = None
+  charttype = "rectangle"
   Z0 = 50
   smithsuffix = ["_real", "_imag"]
   pushChars = "<({["
   popChars = ">)}]"
+  idxThreshold = 1e7
 
-  genoutname = lambda self,x : os.path.splitext(x)[0] + "_plot.txt"
+  formatData = lambda self,x : str(float(x))
 
   def __init__(self):
     self.data = []
     self.title = []
-    self.charttype = "rectangle"
 
   def checkBalanced(self, token):
     stack = []
@@ -73,12 +73,20 @@ class ADSToOrigin():
     denom = (1-2*R+R**2+X**2)
     return str(self.Z0 * (1-R**2-X**2)/denom), str(self.Z0 * 2*X/denom)
 
+  def formatIdx(self, x):
+    """return unit in GHz if x > 1e7"""
+    if float(x) > self.idxThreshold:
+      return str(float(x)/1e9)
+    else: 
+      return x
+
   def convert(self, filename):
     """pack of read and write file"""
     self.data = []
     self.title = []
     self.readfile(filename)
-    outname = self.genoutname(filename)
+    self.charttype = "rectangle"
+    outname = os.path.splitext(filename)[0] + "_plot.txt"
     basename = os.path.basename(filename)
 
     #verify data
@@ -170,11 +178,11 @@ class ADSToOrigin():
         titlelist.append(validlist[-2])
       if self.charttype == "rectangle":
         for row0,row1 in zip(validlist[0:-2], dataline[0:-2]):
-          token.append("%s=%s" % (row0, row1))
+          token.append("%s=%s" % (row0, self.formatData(row1)))
         titlelist.append(",".join(token))
       elif self.charttype == "smith":
         for row0,row1 in zip(validlist[0:-2], dataline[0:-2]):
-          token.append("%s=%s" % (row0, row1))
+          token.append("%s=%s" % (row0, self.formatData(row1)))
         titlelist.append(",".join(token))
 
     return titlelist
@@ -193,13 +201,15 @@ class ADSToOrigin():
     # in smith chart, we need to change magnitude / phase into real img 
     if self.charttype == "rectangle":
       for i in range(0,len(block)):
-        idxlist[i] = block[i][-2]
-        vallist[i] = block[i][-1]
+        idxlist[i] = self.formatIdx(block[i][-2])
+        vallist[i] = self.formatData(block[i][-1])
     elif self.charttype == "smith":
       idxid = (len(block))/3
       for i in range(0, len(block)):
-        idxlist[i] = block[i][0]
-        vallist[0][i], vallist[1][i-1] = self.MP2RI(block[i][-3], block[i][-1])
+        idxlist[i] = self.formatIdx(block[i][0])
+        real,imag = self.MP2RI(block[i][-3], block[i][-1])
+        vallist[0][i] = self.formatData(real)
+        vallist[1][i-1] = self.formatData(imag)
 
     return idxlist,vallist
 

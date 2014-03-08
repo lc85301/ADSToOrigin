@@ -5,6 +5,7 @@ ADSToOrigin Changelog
 ADSToOrigin 0.3.1 (三月 06, 2014):
   Feature added:
   * Handle parentheses and bracket correctly
+  * Format String, frequency in GHz if larger than 1e7, data in floating point
 
   Bug Fixed:
   * output message will shows file fullname, modify to basename
