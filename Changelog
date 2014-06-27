@@ -2,6 +2,15 @@
 ADSToOrigin Changelog
 ---------------
 
+ADSToOrigin 0.3.2 (六月 27, 2014):
+  Feature added:
+  * Now all output to csv file
+  * preserve first column if data blocks in different length
+  * Auto strip first column if all data block has same length
+
+  Bug Fixed:
+  * Title of multi-var smith chart is error
+
 ADSToOrigin 0.3.1 (三月 06, 2014):
   Feature added:
   * Handle parentheses and bracket correctly

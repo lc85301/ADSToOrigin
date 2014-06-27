@@ -27,8 +27,10 @@
 
 import sys
 import os.path
+import csv
 import copy
 import math
+import itertools
 
 class ADSToOrigin():
   """A class that provide a easy tool, transfer
@@ -84,10 +86,12 @@ class ADSToOrigin():
     """pack of read and write file"""
     self.data = []
     self.title = []
-    self.readfile(filename)
     self.charttype = "rectangle"
-    outname = os.path.splitext(filename)[0] + "_plot.txt"
+    self.readfile(filename)
+    outname = os.path.splitext(filename)[0] + "_plot.csv"
     basename = os.path.basename(filename)
+
+    print("convert %s, file type %s" % (basename, self.charttype))
 
     #verify data
     datalength = len(self.data[0])
@@ -97,13 +101,11 @@ class ADSToOrigin():
         identical = False
         break;
     if not identical:
-      print("The data length in file %s is not identical" % (basename))
-      print("Output file will be incorrect")
+      print("WARNING: The data length in file %s is not identical" % (basename))
+      print("The output file might be incorrect, please check")
 
     #output file
     self.writefile(outname)
-
-    print("convert %s, file type %s" % (basename, self.charttype))
 
   def readfile(self, filename):
     """readfile, read a block separated by blank line"""
@@ -169,8 +171,8 @@ class ADSToOrigin():
       if self.charttype == "rectangle":
         titlelist.append(validlist[1])
       elif self.charttype == "smith":
-        for i in range(2):
-          titlelist.append(validlist[1]+self.smithsuffix[i])
+        for suffix in self.smithsuffix:
+          titlelist.append(validlist[1]+suffix)
     elif len(validlist) > 2:
       token = []
       token.append(validlist[-1])
@@ -183,8 +185,8 @@ class ADSToOrigin():
       elif self.charttype == "smith":
         for row0,row1 in zip(validlist[0:-2], dataline[0:-2]):
           token.append("%s=%s" % (row0, self.formatData(row1)))
-        titlelist.append(",".join(token))
-
+        for suffix in self.smithsuffix:
+          titlelist.append(",".join(token)+suffix)
     return titlelist
 
   def processBlock(self, block):
@@ -217,12 +219,13 @@ class ADSToOrigin():
     """write loaded data into output file"""
     try:
       outfile = open(filename, mode='w')
-      outfile.write("%s\n" % ("\t".join(self.title)))
-      for line in zip(*(self.data)):
-        outfile.write("%s\n" %("\t".join(line)))
+      csvfile = csv.writer(outfile, dialect='excel')
+      csvfile.writerow(self.title)
+      for line in itertools.izip_longest(*(self.data), fillvalue=""):
+        csvfile.writerow(line)
     except IOError:
       sys.stderr.write("can't open output Origin style file\n")
-      sys.stderr.write("file %s doesn't exist\n" % (outfilename))
+      sys.stderr.write("file %s doesn't exist\n" % (filename))
       return(1)
     finally:
       if outfile is not None:
